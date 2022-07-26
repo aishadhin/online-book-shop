@@ -26,15 +26,14 @@ async function run() {
             res.send(books)
         })
 
-        app.get("/product/:id", async (req, res) => {
+        app.get('/product/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
-            const product = await productCollection.findOne(query);
-            res.send(product);
+            const book = await bookCollections.findOne(query);
+            res.send(book);
         });
 
     } finally {
-        //   await client.close();
     }
 }
 run().catch(console.dir);
@@ -45,7 +44,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('kamal hain')
+    res.send('done')
 })
 
 app.listen(port, () => {
