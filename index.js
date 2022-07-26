@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 
 app.use(cors());
@@ -18,13 +18,20 @@ async function run() {
     try {
         await client.connect();
         const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
-        
-        app.get('/products', async(req,res)=>{
+
+        app.get('/products', async (req, res) => {
             const query = {};
             const cursor = bookCollections.find(query);
             const books = await cursor.toArray();
             res.send(books)
         })
+
+        app.get("/product/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const product = await productCollection.findOne(query);
+            res.send(product);
+        });
 
     } finally {
         //   await client.close();
