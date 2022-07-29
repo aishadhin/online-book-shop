@@ -33,6 +33,12 @@ async function run() {
             const singleBook = await bookCollections.findOne(query);
             res.send(singleBook);
         });
+        
+        get.post('/cartProduct', async (req, res)=>{
+            const product=req.body;
+            const result= await AddToCartCollection.insertOne(product)
+            res.send(result)
+        })
 
     } finally {
         
