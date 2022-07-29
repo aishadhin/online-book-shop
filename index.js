@@ -18,6 +18,7 @@ async function run() {
     try {
         await client.connect();
         const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
+        const AddToCartCollection=client.db("BookStoreDatabase").collection("cartProduct")
 
         app.get('/products', async (req, res) => {
             const query = {};
