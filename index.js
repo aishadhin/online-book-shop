@@ -18,7 +18,36 @@ async function run() {
     try {
         await client.connect();
         const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
-        const AddToCartCollection=client.db("AddToCart").collection("cartProduct")
+        const AddToCartCollection = client.db("AddToCart").collection("cartProduct")
+
+
+
+
+
+
+
+
+
+        app.get('/product',  async (req, res) => {
+            if (req.query.name) {
+                const name = req.query.name;
+                const matched = await bookCollections.find({ "name" : { "$regex" : name , "$options" : "i"}}).toArray();
+                res.send(matched);
+            } else {
+                res.send(bookCollections)
+            }
+        })
+
+
+
+
+
+
+
+
+
+
+
 
         app.get('/products', async (req, res) => {
             const query = {};
@@ -35,28 +64,30 @@ async function run() {
         });
 
 
-        app.post('/cartProduct', async (req, res)=>{
-            const product=req.body;
+        app.post('/cartProduct', async (req, res) => {
+            const product = req.body;
             console.log(product);
-            const query = {products: product.bookName}
+            const query = { products: product.bookName }
             console.log(query);
             const exists = await AddToCartCollection.findOne(query);
-            if(exists){
-                return res.send({success: false, product:exists})
+            if (exists) {
+                return res.send({ success: false, product: exists })
             }
-            const result= await AddToCartCollection.insertOne(product)
+            const result = await AddToCartCollection.insertOne(product)
             res.send(product.success, result)
         })
+
+
         app.get('/cartProduct', async (req, res) => {
             const query = {};
-            const cursor =  AddToCartCollection.find(query);
+            const cursor = AddToCartCollection.find(query);
             const books = await cursor.toArray();
             res.send(books)
         })
 
 
     } finally {
-        
+
     }
 }
 run().catch(console.dir);
