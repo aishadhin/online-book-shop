@@ -21,7 +21,7 @@ async function run() {
         const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
         const userCollections = client.db("BookStoreDatabase").collection("users");
         const AddToCartCollection=client.db("AddToCart").collection("cartProduct")
-
+        // get product 
         app.get('/products', async (req, res) => {
             const query = {};
             const cursor = bookCollections.find(query);
@@ -92,7 +92,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send(' server side done')
+    res.send(' our site is running properly')
 })
 
 app.listen(port, () => {
