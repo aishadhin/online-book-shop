@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -18,6 +19,7 @@ async function run() {
     try {
         await client.connect();
         const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
+        const userCollections = client.db("BookStoreDatabase").collection("users");
         const AddToCartCollection=client.db("AddToCart").collection("cartProduct")
 
         app.get('/products', async (req, res) => {
@@ -33,6 +35,29 @@ async function run() {
             const singleBook = await bookCollections.findOne(query);
             res.send(singleBook);
         });
+
+        //user create and add mongodb
+        app.put('/user/:email', async(req,res)=>{
+            const email = req.params.email;
+            const user =req.body
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+              };
+              const result = await userCollections.updateOne(filter, updateDoc, options);
+
+              const token =jwt.sign({email:email},"0d295b70d05f82791065eef657f45ed4a493bbd384f8a06de0627ff553bcbf2ed9bf0f90331a226caa6ff1850bce8ab868677c1432fa6defb7dcc44bc2aa3d9a",{ expiresIn: '1h' })
+
+              res.send({result, token});
+        })
+        //get User
+        app.get('/user', async (req, res) => {
+            const query = {};
+            const cursor =userCollections.find(query);
+            const users = await cursor.toArray();
+            res.send(users)
+        })
 
 
         app.post('/cartProduct', async (req, res)=>{
