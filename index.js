@@ -29,6 +29,12 @@ async function run() {
             res.send(books)
         })
 
+        app.post("/products", async (req, res) => {
+            const newBook = req.body;
+            const result = await bookCollections.insertOne(newBook);
+            res.send(result);
+          });
+
         app.get('/product/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -79,19 +85,12 @@ async function run() {
             res.send(books)
         })
 
-<<<<<<< HEAD
         app.get('/categories', async (req, res) => {
             const category = req.query.category;
             const result = await bookCollections.find({ category: category }).toArray();
             res.send(result)
         });
-        app.get('/addProducts', async (req, res) => {
-            const category = req.query.category;
-            const result = await bookCollections.find({ category: category }).toArray();
-            res.send(result)
-        });
-=======
->>>>>>> ff9115bd9319981a8146ecdf85a8c19ec74e1817
+
 
     } finally {
         
