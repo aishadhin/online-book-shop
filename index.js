@@ -69,6 +69,11 @@ async function run() {
             const result = await bookCollections.find({ category: category }).toArray();
             res.send(result)
         });
+        app.get('/addProducts', async (req, res) => {
+            const category = req.query.category;
+            const result = await bookCollections.find({ category: category }).toArray();
+            res.send(result)
+        });
 
     } finally {
 
