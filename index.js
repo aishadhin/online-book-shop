@@ -20,34 +20,15 @@ async function run() {
         const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
         const AddToCartCollection = client.db("AddToCart").collection("cartProduct")
 
-
-
-
-
-
-
-
-
-        app.get('/product',  async (req, res) => {
+        app.get('/product', async (req, res) => {
             if (req.query.name) {
                 const name = req.query.name;
-                const matched = await bookCollections.find({ "name" : { "$regex" : name , "$options" : "i"}}).toArray();
+                const matched = await bookCollections.find({ "name": { "$regex": name, "$options": "i" } }).toArray();
                 res.send(matched);
             } else {
                 res.send(bookCollections)
             }
         })
-
-
-
-
-
-
-
-
-
-
-
 
         app.get('/products', async (req, res) => {
             const query = {};
@@ -63,7 +44,6 @@ async function run() {
             res.send(singleBook);
         });
 
-
         app.post('/cartProduct', async (req, res) => {
             const product = req.body;
             console.log(product);
@@ -77,7 +57,6 @@ async function run() {
             res.send(product.success, result)
         })
 
-
         app.get('/cartProduct', async (req, res) => {
             const query = {};
             const cursor = AddToCartCollection.find(query);
@@ -85,6 +64,11 @@ async function run() {
             res.send(books)
         })
 
+        app.get('/categories', async (req, res) => {
+            const category = req.query.category;
+            const result = await bookCollections.find({ category: category }).toArray();
+            res.send(result)
+        });
 
     } finally {
 
