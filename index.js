@@ -116,11 +116,11 @@ async function run() {
         })
 
         //search filter
-        app.get('/filterProduct/', async (req, res) => {
+        app.get('/product/', async (req, res) => {
             if (req.query.name) {
                 const name = req.query.name;
                 const matched = await bookCollections.find({ "name": { "$regex": name, "$options": "i" } }).toArray();
-                res.json(matched);
+                res.send(matched);
             } else {
                 res.send(bookCollections)
             }
