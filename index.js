@@ -20,6 +20,7 @@ async function run() {
         await client.connect();
         const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
         const userCollections = client.db("BookStoreDatabase").collection("users");
+        const wishListCollections = client.db("BookStoreDatabase").collection("wishList");
         const AddToCartCollection=client.db("AddToCart").collection("cartProduct")
         // get product 
         app.get('/products', async (req, res) => {
@@ -42,7 +43,7 @@ async function run() {
             res.send(singleBook);
         });
         
-        get.post('/cartProduct', async (req, res)=>{
+        app.post('/cartProduct', async (req, res)=>{
             const product=req.body;
             const result= await AddToCartCollection.insertOne(product)
             res.send(result)
@@ -74,9 +75,7 @@ async function run() {
 
         app.post('/cartProduct', async (req, res)=>{
             const product=req.body;
-            console.log(product);
-            const query = {products: product.bookName}
-            console.log(query);
+            const query = {products: product.name}
             const exists = await AddToCartCollection.findOne(query);
             if(exists){
                 return res.send({success: false, product:exists})
@@ -96,6 +95,25 @@ async function run() {
             const result = await bookCollections.find({ category: category }).toArray();
             res.send(result)
         });
+          //wishList product add mongodb
+          app.put('/wishList', async (req, res) => {
+            const product=req.body;
+            const filter = {name: product.name}
+            console.log(filter);
+            const options = { upsert: true };
+            const updateDoc = {
+              $set: product,
+            };
+            const result = await wishListCollections.updateOne(filter, updateDoc, options);
+            res.send(result)
+          })
+          // get wishList to mongodb
+          app.get('/wishList', async (req, res) => {
+            const query = {};
+            const cursor =  wishListCollections.find(query);
+            const list = await cursor.toArray();
+            res.send(list)
+        })
 
 
     } finally {
