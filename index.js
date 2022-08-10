@@ -49,7 +49,7 @@ async function run() {
             res.send(result)
         })
 
-        //user create and add mongodb
+        //user create , and add mongodb
         app.put('/user/:email', async(req,res)=>{
             const email = req.params.email;
             const user =req.body
