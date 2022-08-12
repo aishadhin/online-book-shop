@@ -5,16 +5,18 @@ const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
+
 app.use(cors());
 app.use(express.json());
 
-const uri =
-  "mongodb+srv://OnlineBookStore:suD5wAadFKukGfoR@cluster0.u5nmk.mongodb.net/?retryWrites=true&w=majority";
-const client = new MongoClient(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverApi: ServerApiVersion.v1,
-});
+
+
+
+
+
+
+const uri = "mongodb+srv://OnlineBookStore:suD5wAadFKukGfoR@cluster0.u5nmk.mongodb.net/?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -25,6 +27,7 @@ function verifyJWT(req, res, next) {
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
     if (err) {
       return res.status(403).send({ message: "Forbidden access" });
+
     }
     req.decoded = decoded;
     next();
@@ -148,6 +151,13 @@ async function run() {
       const books = await cursor.toArray();
       res.send(books);
     });
+    // delete cart item
+    app.delete('/cartProduct/:id', async(req,res)=>{
+        const id =req.params.id;
+        const query ={_id: ObjectId(id)};
+        const result =await AddToCartCollection.deleteOne(query);
+        res.send(result)
+    })
 
     app.get("/categories", async (req, res) => {
       const category = req.query.category;
@@ -179,12 +189,28 @@ async function run() {
       const list = await cursor.toArray();
       res.send(list);
     });
+     //wishList product add mongodb
+     app.put('/wishList', async (req, res) => {
+        const product=req.body;
+        const filter = {name: product.name}
+        console.log(filter);
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: product,
+        };
+        const result = await wishListCollections.updateOne(filter, updateDoc, options);
+        res.send(result)
+      })
+    //delete wishlist
+    app.delete('/wishList/:id', async(req,res)=>{
+        const id =req.params.id;
+        const query ={_id: ObjectId(id)};
+        const result =await wishListCollections.deleteOne(query);
+        res.send(result)
+    })
 
-    app.post("/wishList", async (req, res) => {
-      const newBook = req.body;
-      const result = await wishListCollections.insertOne(newBook);
-      res.send(result);
-    });
+    
+
 
     //search filter
     app.get("/product/", async (req, res) => {
