@@ -151,7 +151,7 @@ async function run() {
       const books = await cursor.toArray();
       res.send(books);
     });
-    // delete cart item
+    // delete cart items
     app.delete('/cartProduct/:id', async(req,res)=>{
         const id =req.params.id;
         const query ={_id: ObjectId(id)};
