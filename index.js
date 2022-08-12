@@ -3,7 +3,8 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId
 
 
 app.use(cors());
@@ -43,9 +44,22 @@ async function run() {
             res.send(singleBook);
         });
         
-        app.post('/cartProduct', async (req, res)=>{
-            const product=req.body;
-            const result= await AddToCartCollection.insertOne(product)
+        // app.post('/cartProduct', async (req, res)=>{
+        //     const product=req.body;
+        //     const result= await AddToCartCollection.insertOne(product)
+        //     res.send(result)
+        // })
+        app.get('/cartProduct', async (req, res) => {
+            const query = {};
+            const cursor =  AddToCartCollection.find(query);
+            const books = await cursor.toArray();
+            res.send(books)
+        })
+        // delete cart item
+        app.delete('/cartProduct/:id', async(req,res)=>{
+            const id =req.params.id;
+            const query ={_id: ObjectId(id)};
+            const result =await AddToCartCollection.deleteOne(query);
             res.send(result)
         })
 
@@ -72,7 +86,7 @@ async function run() {
             res.send(users)
         })
 
-
+        // add to cart
         app.post('/cartProduct', async (req, res)=>{
             const product=req.body;
             const query = {products: product.name}
@@ -83,12 +97,8 @@ async function run() {
             const result= await AddToCartCollection.insertOne(product)
             res.send(product.success, result)
         })
-        app.get('/cartProduct', async (req, res) => {
-            const query = {};
-            const cursor =  AddToCartCollection.find(query);
-            const books = await cursor.toArray();
-            res.send(books)
-        })
+       
+        
 
         app.get('/categories', async (req, res) => {
             const category = req.query.category;
@@ -113,6 +123,13 @@ async function run() {
             const cursor =  wishListCollections.find(query);
             const list = await cursor.toArray();
             res.send(list)
+        })
+        //delete wishlist
+        app.delete('/wishList/:id', async(req,res)=>{
+            const id =req.params.id;
+            const query ={_id: ObjectId(id)};
+            const result =await wishListCollections.deleteOne(query);
+            res.send(result)
         })
 
 
