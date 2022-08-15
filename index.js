@@ -10,12 +10,15 @@ app.use(cors());
 app.use(express.json());
 
 
+const uri = "mongodb://OnlineBookStore:suD5wAadFKukGfoR@cluster0-shard-00-00.u5nmk.mongodb.net:27017,cluster0-shard-00-01.u5nmk.mongodb.net:27017,cluster0-shard-00-02.u5nmk.mongodb.net:27017/?ssl=true&replicaSet=atlas-3s9kmp-shard-0&authSource=admin&retryWrites=true&w=majority";
+// MongoClient.connect(uri, function(err, client) {
+//   const collection = client.db("test").collection("devices");
+//   // perform actions on the collection object
+//   client.close();
+// }
 
 
-
-
-
-const uri = "mongodb+srv://OnlineBookStore:suD5wAadFKukGfoR@cluster0.u5nmk.mongodb.net/?retryWrites=true&w=majority";
+// const uri = "mongodb+srv://OnlineBookStore:suD5wAadFKukGfoR@cluster0.u5nmk.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req, res, next) {
@@ -37,17 +40,10 @@ function verifyJWT(req, res, next) {
 async function run() {
   try {
     await client.connect();
-    const bookCollections = client
-      .db("BookStoreDatabase")
-      .collection("book-collections");
+    const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
     const userCollections = client.db("BookStoreDatabase").collection("users");
-    const wishListCollections = client
-      .db("BookStoreDatabase")
-      .collection("wishList");
-    const AddToCartCollection = client
-      .db("AddToCart")
-      .collection("cartProduct");
-
+    const wishListCollections = client.db("BookStoreDatabase").collection("wishList");
+    const AddToCartCollections = client.db("BookStoreDatabase").collection("cartProduct");
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
       const requesterAccount = await userCollections.findOne({
@@ -81,11 +77,6 @@ async function run() {
       res.send(singleBook);
     });
 
-    app.post("/cartProduct", async (req, res) => {
-      const product = req.body;
-      const result = await AddToCartCollection.insertOne(product);
-      res.send(result);
-    });
 
     //user create , and add mongodb
     app.put("/user/:email", async (req, res) => {
@@ -117,6 +108,23 @@ async function run() {
       const users = await cursor.toArray();
       res.send(users);
     });
+    //delete a user
+    app.delete("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter ={email: email}
+      const result = await userCollections.deleteOne(filter)
+      res.send(result);
+
+    })
+    app.delete("/wishList/:id", async (req,res)=>{
+      const id =req.params.id;
+      console.log(id)
+      const query ={_id:id};
+      const result =await wishListCollections.deleteOne(query);
+      console.log(result)
+      res.send(result)
+  })
+
 
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
@@ -135,29 +143,38 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/cartProduct", async (req, res) => {
+
+    //cart item add
+    app.put("/cartProduct", async (req, res) => {
       const product = req.body;
-      const query = { products: product.name };
-      const exists = await AddToCartCollection.findOne(query);
-      if (exists) {
-        return res.send({ success: false, product: exists });
-      }
-      const result = await AddToCartCollection.insertOne(product);
-      res.send(product.success, result);
+      const filter = { name: product.name };
+      console.log(filter);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: product,
+      };
+      const result = await AddToCartCollections.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
     });
+    //get cart item
     app.get("/cartProduct", async (req, res) => {
       const query = {};
-      const cursor = AddToCartCollection.find(query);
+      const cursor = AddToCartCollections.find(query);
       const books = await cursor.toArray();
       res.send(books);
     });
     // delete cart item
-    app.delete('/cartProduct/:id', async(req,res)=>{
-        const id =req.params.id;
-        const query ={_id: ObjectId(id)};
-        const result =await AddToCartCollection.deleteOne(query);
-        res.send(result)
-    })
+  app.delete("/cartProduct/:id", async (req, res) => {
+    const id= req.params.id;
+    console.log(id)
+    const query = {_id: id};
+    const result = await AddToCartCollections.deleteOne(query);
+    res.send(result)
+ })
 
     app.get("/categories", async (req, res) => {
       const category = req.query.category;
@@ -190,7 +207,7 @@ async function run() {
       res.send(list);
     });
      //wishList product add mongodb
-     app.put('/wishList', async (req, res) => {
+     app.put("/wishList", async (req, res) => {
         const product=req.body;
         const filter = {name: product.name}
         console.log(filter);
@@ -202,12 +219,13 @@ async function run() {
         res.send(result)
       })
     //delete wishlist
-    app.delete('/wishList/:id', async(req,res)=>{
-        const id =req.params.id;
-        const query ={_id: ObjectId(id)};
-        const result =await wishListCollections.deleteOne(query);
-        res.send(result)
-    })
+    // app.delete("/wishList/:id", async(req,res)=>{
+    //     const id =req.params.id;
+    //     console.log(id)
+    //     const query ={_id:ObjectId(id)};
+    //     const result =await wishListCollections.deleteOne(query);
+    //     res.send(result)
+    // })
 
     
 
