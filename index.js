@@ -116,16 +116,6 @@ async function run() {
       res.send(result);
 
     })
-    app.delete("/wishList/:id", async (req,res)=>{
-      const id =req.params.id;
-      console.log(id)
-      const query ={_id:id};
-      const result =await wishListCollections.deleteOne(query);
-      console.log(result)
-      res.send(result)
-  })
-
-
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await userCollections.findOne({ email: email });
@@ -142,8 +132,6 @@ async function run() {
       const result = await userCollections.updateOne(filter, updateDoc);
       res.send(result);
     });
-
-
     //cart item add
     app.put("/cartProduct", async (req, res) => {
       const product = req.body;
@@ -162,9 +150,9 @@ async function run() {
     });
     //get cart item
     app.get("/cartProduct", async (req, res) => {
-      const query = {};
-      const cursor = AddToCartCollections.find(query);
-      const books = await cursor.toArray();
+      const email =req.query.email
+      const query = {email :email};
+      const books  = await  AddToCartCollections.find(query).toArray(); 
       res.send(books);
     });
     // delete cart item
@@ -201,9 +189,9 @@ async function run() {
     });
     // get wishList to mongodb
     app.get("/wishList", async (req, res) => {
-      const query = {};
-      const cursor = wishListCollections.find(query);
-      const list = await cursor.toArray();
+      const email =req.query.email
+      const query = {email :email};
+      const list  =await wishListCollections.find(query).toArray();
       res.send(list);
     });
      //wishList product add mongodb
@@ -218,17 +206,15 @@ async function run() {
         const result = await wishListCollections.updateOne(filter, updateDoc, options);
         res.send(result)
       })
-    //delete wishlist
-    // app.delete("/wishList/:id", async(req,res)=>{
-    //     const id =req.params.id;
-    //     console.log(id)
-    //     const query ={_id:ObjectId(id)};
-    //     const result =await wishListCollections.deleteOne(query);
-    //     res.send(result)
-    // })
-
-    
-
+   //delete wishlist
+   app.delete("/wishList/:id", async (req,res)=>{
+    const id =req.params.id;
+    console.log(id)
+    const query ={_id:id};
+    const result =await wishListCollections.deleteOne(query);
+    console.log(result)
+    res.send(result)
+})
 
     //search filter
     app.get("/product/", async (req, res) => {
