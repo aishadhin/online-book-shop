@@ -5,45 +5,53 @@ const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
-
 app.use(cors());
 app.use(express.json());
 
-
-const uri = "mongodb://OnlineBookStore:suD5wAadFKukGfoR@cluster0-shard-00-00.u5nmk.mongodb.net:27017,cluster0-shard-00-01.u5nmk.mongodb.net:27017,cluster0-shard-00-02.u5nmk.mongodb.net:27017/?ssl=true&replicaSet=atlas-3s9kmp-shard-0&authSource=admin&retryWrites=true&w=majority";
+const uri =
+  "mongodb://OnlineBookStore:suD5wAadFKukGfoR@cluster0-shard-00-00.u5nmk.mongodb.net:27017,cluster0-shard-00-01.u5nmk.mongodb.net:27017,cluster0-shard-00-02.u5nmk.mongodb.net:27017/?ssl=true&replicaSet=atlas-3s9kmp-shard-0&authSource=admin&retryWrites=true&w=majority";
 // MongoClient.connect(uri, function(err, client) {
 //   const collection = client.db("test").collection("devices");
 //   // perform actions on the collection object
 //   client.close();
 // }
 
-
 // const uri = "mongodb+srv://OnlineBookStore:suD5wAadFKukGfoR@cluster0.u5nmk.mongodb.net/?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverApi: ServerApiVersion.v1,
+});
 
-function verifyJWT(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).send({ message: "UnAuthorized access" });
-  }
-  const token = authHeader.split(" ")[1];
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
-    if (err) {
-      return res.status(403).send({ message: "Forbidden access" });
+// function verifyJWT(req, res, next) {
+//   const authHeader = req.headers.authorization;
+//   if (!authHeader) {
+//     return res.status(401).send({ message: "UnAuthorized access" });
+//   }
+//   const token = authHeader.split(" ")[1];
+//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+//     if (err) {
+//       return res.status(403).send({ message: "Forbidden access" });
 
-    }
-    req.decoded = decoded;
-    next();
-  });
-}
+//     }
+//     req.decoded = decoded;
+//     next();
+//   });
+// }
 
 async function run() {
   try {
     await client.connect();
-    const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
+    const bookCollections = client
+      .db("BookStoreDatabase")
+      .collection("book-collections");
     const userCollections = client.db("BookStoreDatabase").collection("users");
-    const wishListCollections = client.db("BookStoreDatabase").collection("wishList");
-    const AddToCartCollections = client.db("BookStoreDatabase").collection("cartProduct");
+    const wishListCollections = client
+      .db("BookStoreDatabase")
+      .collection("wishList");
+    const AddToCartCollections = client
+      .db("BookStoreDatabase")
+      .collection("cartProduct");
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
       const requesterAccount = await userCollections.findOne({
@@ -77,7 +85,6 @@ async function run() {
       res.send(singleBook);
     });
 
-
     //user create , and add mongodb
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
@@ -101,6 +108,16 @@ async function run() {
 
       res.send({ result, token });
     });
+
+    app.delete("/wishList/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: id };
+      const result = await wishListCollections.deleteOne(query);
+      console.log(result);
+      res.send(result);
+    });
+
     //get User
     app.get("/user", async (req, res) => {
       const query = {};
@@ -111,8 +128,8 @@ async function run() {
     //delete a user
     app.delete("/user/:email", async (req, res) => {
       const email = req.params.email;
-      const filter ={email: email}
-      const result = await userCollections.deleteOne(filter)
+      const filter = { email: email };
+      const result = await userCollections.deleteOne(filter);
       res.send(result);
 
     })
@@ -122,8 +139,14 @@ async function run() {
       const isAdmin = user.role === "admin";
       res.send({ admin: isAdmin });
     });
+    // app.get("/admin/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const user = await userCollections.findOne({ email: email });
+    //   const isAdmin = user.role === "admin";
+    //   res.send({ admin: isAdmin });
+    // });
 
-    app.put("/user/admin/:email", verifyJWT, verifyAdmin, async (req, res) => {
+    app.put("/user/admin/:email", async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
       const updateDoc = {
@@ -156,13 +179,13 @@ async function run() {
       res.send(books);
     });
     // delete cart item
-  app.delete("/cartProduct/:id", async (req, res) => {
-    const id= req.params.id;
-    console.log(id)
-    const query = {_id: id};
-    const result = await AddToCartCollections.deleteOne(query);
-    res.send(result)
- })
+    app.delete("/cartProduct/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: id };
+      const result = await AddToCartCollections.deleteOne(query);
+      res.send(result);
+    });
 
     app.get("/categories", async (req, res) => {
       const category = req.query.category;
@@ -215,7 +238,6 @@ async function run() {
     console.log(result)
     res.send(result)
 })
-
     //search filter
     app.get("/product/", async (req, res) => {
       if (req.query.name) {
