@@ -168,7 +168,8 @@ async function run() {
       const books  = await  AddToCartCollections.find(query).toArray(); 
       res.send(books);
     });
-    // delete cart item
+
+    // delete carts items
     app.delete("/cartProduct/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
