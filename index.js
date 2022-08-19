@@ -272,5 +272,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("listenings to port", port);
+  console.log("listening to port", port);
 });
