@@ -4,19 +4,14 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors());
 app.use(express.json());
 
 const uri =
   "mongodb://OnlineBookStore:suD5wAadFKukGfoR@cluster0-shard-00-00.u5nmk.mongodb.net:27017,cluster0-shard-00-01.u5nmk.mongodb.net:27017,cluster0-shard-00-02.u5nmk.mongodb.net:27017/?ssl=true&replicaSet=atlas-3s9kmp-shard-0&authSource=admin&retryWrites=true&w=majority";
-// MongoClient.connect(uri, function(err, client) {
-//   const collection = client.db("test").collection("devices");
-//   // perform actions on the collection object
-//   client.close();
-// }
 
-// const uri = "mongodb+srv://OnlineBookStore:suD5wAadFKukGfoR@cluster0.u5nmk.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -131,13 +126,15 @@ async function run() {
       const filter = { email: email };
       const result = await userCollections.deleteOne(filter);
       res.send(result);
+
+    })
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollections.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
     });
-    // app.get("/admin/:email", async (req, res) => {
-    //   const email = req.params.email;
-    //   const user = await userCollections.findOne({ email: email });
-    //   const isAdmin = user.role === "admin";
-    //   res.send({ admin: isAdmin });
-    // });
+
 
     app.put("/user/admin/:email", async (req, res) => {
       const email = req.params.email;
@@ -148,7 +145,6 @@ async function run() {
       const result = await userCollections.updateOne(filter, updateDoc);
       res.send(result);
     });
-
     //cart item add
     app.put("/cartProduct", async (req, res) => {
       const product = req.body;
@@ -167,9 +163,9 @@ async function run() {
     });
     //get cart item
     app.get("/cartProduct", async (req, res) => {
-      const query = {};
-      const cursor = AddToCartCollections.find(query);
-      const books = await cursor.toArray();
+      const email =req.query.email
+      const query = {email :email};
+      const books  = await  AddToCartCollections.find(query).toArray(); 
       res.send(books);
     });
     // delete cart item
@@ -206,36 +202,32 @@ async function run() {
     });
     // get wishList to mongodb
     app.get("/wishList", async (req, res) => {
-      const query = {};
-      const cursor = wishListCollections.find(query);
-      const list = await cursor.toArray();
+      const email =req.query.email
+      const query = {email :email};
+      const list  =await wishListCollections.find(query).toArray();
       res.send(list);
     });
-    //wishList product add mongodb
-    app.put("/wishList", async (req, res) => {
-      const product = req.body;
-      const filter = { name: product.name };
-      console.log(filter);
-      const options = { upsert: true };
-      const updateDoc = {
-        $set: product,
-      };
-      const result = await wishListCollections.updateOne(
-        filter,
-        updateDoc,
-        options
-      );
-      res.send(result);
-    });
-    //delete wishlist
-    // app.delete("/wishList/:id", async(req,res)=>{
-    //     const id =req.params.id;
-    //     console.log(id)
-    //     const query ={_id:ObjectId(id)};
-    //     const result =await wishListCollections.deleteOne(query);
-    //     res.send(result)
-    // })
-
+     //wishList product add mongodb
+     app.put("/wishList", async (req, res) => {
+        const product=req.body;
+        const filter = {name: product.name}
+        console.log(filter);
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: product,
+        };
+        const result = await wishListCollections.updateOne(filter, updateDoc, options);
+        res.send(result)
+      })
+   //delete wishlist
+   app.delete("/wishList/:id", async (req,res)=>{
+    const id =req.params.id;
+    console.log(id)
+    const query ={_id:id};
+    const result =await wishListCollections.deleteOne(query);
+    console.log(result)
+    res.send(result)
+})
     //search filter
     app.get("/product/", async (req, res) => {
       if (req.query.name) {
@@ -247,6 +239,27 @@ async function run() {
       } else {
         res.send(bookCollections);
       }
+    });
+
+    //payment intent
+    app.post("/create-payment-intent", async (req, res) => {
+      const total  = req.body;
+      const subTotal = {subTotal:total.subTotal}
+
+      const amount = subTotal *100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_methods_types:['card']
+      },
+    
+      );
+    console.log(clientSecret)
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+        
+      });
+      
     });
   } finally {
   }
