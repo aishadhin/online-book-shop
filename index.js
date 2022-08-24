@@ -4,7 +4,8 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')("sk_test_51LXxS0A5hc9xpUZ00m3LDFBl7spSr5tFFOxHViSv8AHVthEgRLbzjSUxVP1jLQFkQpcQZ9TbjjDTs6u2rVfywBkO00soLm4jWB");
 
 app.use(cors());
 app.use(express.json());
@@ -37,16 +38,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    const bookCollections = client
-      .db("BookStoreDatabase")
-      .collection("book-collections");
+    const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
     const userCollections = client.db("BookStoreDatabase").collection("users");
-    const wishListCollections = client
-      .db("BookStoreDatabase")
-      .collection("wishList");
-    const AddToCartCollections = client
-      .db("BookStoreDatabase")
-      .collection("cartProduct");
+    const wishListCollections = client.db("BookStoreDatabase").collection("wishList");
+    const AddToCartCollections = client.db("BookStoreDatabase").collection("cartProduct");
+    const OrderCollections = client.db("BookStoreDatabase").collection("order");
+
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
       const requesterAccount = await userCollections.findOne({
@@ -202,6 +199,7 @@ async function run() {
     });
     // get wishList to mongodb
     app.get("/wishList", async (req, res) => {
+    
       const email =req.query.email
       const query = {email :email};
       const list  =await wishListCollections.find(query).toArray();
@@ -241,26 +239,62 @@ async function run() {
       }
     });
 
-    //payment intent
-    app.post("/create-payment-intent", async (req, res) => {
-      const total  = req.body;
-      const subTotal = {subTotal:total.subTotal}
-
-      const amount = subTotal *100;
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: "usd",
-        payment_methods_types:['card']
-      },
-    
-      );
-    console.log(clientSecret)
-      res.send({
-        clientSecret: paymentIntent.client_secret,
-        
-      });
+    //Order
+    app.post('/order', async (req, res) => {
+      const orderItems =req.body
+      console.log(orderItems)
+      const docs = [
+        { price:orderItems.Price, Quantity:orderItems.Quantity},
       
+      ];
+      const options = { ordered: true };
+      const result = await OrderCollections.insertMany(docs, options);
+      res.send(result)
+    })
+    //order get
+    app.get("/order", async (req, res) => {
+      const email =req.query.email
+      const query = {email :email};
+      const list  =await OrderCollections.find(query).toArray();
+      res.send(list);
     });
+
+    //payment intent
+
+
+
+
+    app.post('/create-payment-intent', async(req, res)=>{    
+      const price = req.body;
+          const amount = (price.price) * 100;
+          const paymentIntent = await stripe.paymentIntents.create({
+              amount : amount,
+              currency:'usd',
+              payment_method_types:['card']
+          });
+          res.send({clientSecret: paymentIntent.client_secret})
+      })
+    // app.post("/create-payment-intent", async (req, res) => {
+    //   const total  = req.body;
+      
+    //   // const subTotal = 
+    //   // const allTotal=parseInt(total.subTotal);
+    //   const subTotal = parseInt(total.subTotal)*100;
+    //   console.log(subTotal)
+    //   const paymentIntent = await stripe.paymentIntents.create({
+    //     amount:subTotal,
+    //     currency: "usd",
+    //     payment_methods_types:['card']
+    //   },
+    
+    //   );
+    // console.log(clientSecret)
+    //   res.send({
+    //     clientSecret: paymentIntent.client_secret,
+        
+    //   });
+      
+    // });
   } finally {
   }
 }
