@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 app.use(cors());
 app.use(express.json());
@@ -47,6 +47,7 @@ async function run() {
     const AddToCartCollections = client
       .db("BookStoreDatabase")
       .collection("cartProduct");
+
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
       const requesterAccount = await userCollections.findOne({
@@ -126,8 +127,7 @@ async function run() {
       const filter = { email: email };
       const result = await userCollections.deleteOne(filter);
       res.send(result);
-
-    })
+    });
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await userCollections.findOne({ email: email });
@@ -135,8 +135,7 @@ async function run() {
       res.send({ admin: isAdmin });
     });
 
-
-    app.put("/user/admin/:email", async (req, res) => {
+    app.put("/user/admin/:email", verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const filter = { email: email };
       const updateDoc = {
@@ -163,9 +162,9 @@ async function run() {
     });
     //get cart item
     app.get("/cartProduct", async (req, res) => {
-      const email =req.query.email
-      const query = {email :email};
-      const books  = await  AddToCartCollections.find(query).toArray(); 
+      const email = req.query.email;
+      const query = { email: email };
+      const books = await AddToCartCollections.find(query).toArray();
       res.send(books);
     });
 
@@ -203,32 +202,36 @@ async function run() {
     });
     // get wishList to mongodb
     app.get("/wishList", async (req, res) => {
-      const email =req.query.email
-      const query = {email :email};
-      const list  =await wishListCollections.find(query).toArray();
+      const email = req.query.email;
+      const query = { email: email };
+      const list = await wishListCollections.find(query).toArray();
       res.send(list);
     });
-     //wishList product add mongodb
-     app.put("/wishList", async (req, res) => {
-        const product=req.body;
-        const filter = {name: product.name}
-        console.log(filter);
-        const options = { upsert: true };
-        const updateDoc = {
-          $set: product,
-        };
-        const result = await wishListCollections.updateOne(filter, updateDoc, options);
-        res.send(result)
-      })
-   //delete wishlist
-   app.delete("/wishList/:id", async (req,res)=>{
-    const id =req.params.id;
-    console.log(id)
-    const query ={_id:id};
-    const result =await wishListCollections.deleteOne(query);
-    console.log(result)
-    res.send(result)
-})
+    //wishList product add mongodb
+    app.put("/wishList", async (req, res) => {
+      const product = req.body;
+      const filter = { name: product.name };
+      console.log(filter);
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: product,
+      };
+      const result = await wishListCollections.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+    //delete wishlist
+    app.delete("/wishList/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: id };
+      const result = await wishListCollections.deleteOne(query);
+      console.log(result);
+      res.send(result);
+    });
     //search filter
     app.get("/product/", async (req, res) => {
       if (req.query.name) {
@@ -244,23 +247,19 @@ async function run() {
 
     //payment intent
     app.post("/create-payment-intent", async (req, res) => {
-      const total  = req.body;
-      const subTotal = {subTotal:total.subTotal}
+      const total = req.body;
+      const subTotal = { subTotal: total.subTotal };
 
-      const amount = subTotal *100;
+      const amount = subTotal * 100;
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
-        payment_methods_types:['card']
-      },
-    
-      );
-    console.log(clientSecret)
+        payment_methods_types: ["card"],
+      });
+      console.log(clientSecret);
       res.send({
         clientSecret: paymentIntent.client_secret,
-        
       });
-      
     });
   } finally {
   }
