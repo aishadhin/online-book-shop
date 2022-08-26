@@ -302,7 +302,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("our site is running properly");
+  res.send("the site is running properly");
 });
 
 app.listen(port, () => {
