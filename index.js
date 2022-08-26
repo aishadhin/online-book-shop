@@ -123,15 +123,13 @@ async function run() {
       const filter = { email: email };
       const result = await userCollections.deleteOne(filter);
       res.send(result);
-
-    })
+    });
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await userCollections.findOne({ email: email });
       const isAdmin = user?.role === "admin";
       res.send({ admin: isAdmin });
     });
-
 
     app.put("/user/admin/:email", verifyAdmin, async (req, res) => {
       const email = req.params.email;
@@ -210,6 +208,7 @@ async function run() {
     app.put("/wishList", async (req, res) => {
       const product = req.body;
       const filter = { name: product.name }
+
       console.log(filter);
       const options = { upsert: true };
       const updateDoc = {
@@ -227,6 +226,7 @@ async function run() {
       console.log(result)
       res.send(result)
     })
+
     //search filter
     app.get("/product/", async (req, res) => {
       if (req.query.name) {
