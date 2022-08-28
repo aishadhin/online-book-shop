@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
+// const jwt = require('jsonwebtoken');
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -10,9 +10,6 @@ app.use(cors());
 app.use(express.json());
 
 
-
-
-
 const uri = "mongodb+srv://OnlineBookStore:suD5wAadFKukGfoR@cluster0.u5nmk.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 async function run() {
@@ -20,7 +17,9 @@ async function run() {
         await client.connect();
         const bookCollections = client.db("BookStoreDatabase").collection("book-collections");
         const userCollections = client.db("BookStoreDatabase").collection("users");
-        const AddToCartCollection=client.db("AddToCart").collection("cartProduct")
+        const AddToCartCollection = client.db("AddToCart").collection("cartProduct")
+        const reviewCollection = client.db("BookStoreDatabase").collection("review");
+
         // get product 
         app.get('/products', async (req, res) => {
             const query = {};
@@ -40,6 +39,20 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const singleBook = await bookCollections.findOne(query);
             res.send(singleBook);
+        });
+
+        // review section
+          app.post("/review/:id", async (req, res) => {
+              
+              const id = req.params.id
+              const query ={ _id: ObjectId(id)}
+            const result = await reviewCollection.insertOne(query);
+            res.send(result);
+          });
+        
+        app.get("/review/:id", async (req, res) => {
+          const review = await reviewCollection.find().toArray();
+          res.send(review);
         });
 
         //user create and add mongodb
