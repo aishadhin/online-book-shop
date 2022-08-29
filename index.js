@@ -109,7 +109,7 @@ async function run() {
       const token = jwt.sign(
         { email: email },
         "0d295b70d05f82791065eef657f45ed4a493bbd384f8a06de0627ff553bcbf2ed9bf0f90331a226caa6ff1850bce8ab868677c1432fa6defb7dcc44bc2aa3d9a",
-        { expiresIn: "1h" }
+        { expiresIn: "30d" }
       );
 
       res.send({ result, token });
